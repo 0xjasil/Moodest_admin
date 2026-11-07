@@ -4,3 +4,4 @@
   "buildCommand": "pnpm run build",
   "outputDirectory": "apps/admin/.next"
 }
+

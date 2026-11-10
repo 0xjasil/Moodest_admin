@@ -3,19 +3,23 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import {
-  LayoutDashboard,
-  Tag,
-  Layers,
-  Package,
-  Users,
-  Settings,
-  BarChart3,
-  ShoppingCart,
-  FileText,
-  ChevronRight,
-  Boxes,
-} from "lucide-react";
+import { Icon } from "@iconify/react";
+
+const makeIcon = (iconName: string) => function HeaderIcon({ className }: { className?: string }) {
+  return <Icon icon={iconName} className={className} />;
+};
+
+const LayoutDashboard = makeIcon("lucide:layout-dashboard");
+const Tag = makeIcon("lucide:tag");
+const Layers = makeIcon("lucide:layers");
+const Package = makeIcon("lucide:package");
+const Users = makeIcon("lucide:users");
+const Settings = makeIcon("lucide:settings");
+const BarChart3 = makeIcon("lucide:bar-chart-3");
+const ShoppingCart = makeIcon("lucide:shopping-cart");
+const FileText = makeIcon("lucide:file-text");
+const ChevronRight = makeIcon("lucide:chevron-right");
+const Boxes = makeIcon("lucide:boxes");
 
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { useAuth } from "@/context/AuthContext";

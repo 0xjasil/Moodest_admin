@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { Star, MoreVertical, ShieldCheck, ExternalLink } from "lucide-react";
+import { Star, MoreVertical, ShieldCheck, ExternalLink } from "@/components/ui/icon";
 import { ProfileHeader } from "./profile-header";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";

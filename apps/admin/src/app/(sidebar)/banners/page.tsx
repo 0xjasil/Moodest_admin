@@ -21,10 +21,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import {
-  ArrowUp, ArrowDown, MoreVertical, ImageIcon,
-  ChevronLeft, ChevronRight, Link as LinkIcon, Eye, EyeOff, Globe,
-} from "lucide-react";
+import { Icon } from "@iconify/react";
+
+const makeIcon = (iconName: string) => function BannerIcon({ className }: { className?: string }) {
+  return <Icon icon={iconName} className={className} />;
+};
+
+const ArrowUp = makeIcon("lucide:arrow-up");
+const ArrowDown = makeIcon("lucide:arrow-down");
+const MoreVertical = makeIcon("lucide:more-vertical");
+const ImageIcon = makeIcon("lucide:image");
+const ChevronLeft = makeIcon("lucide:chevron-left");
+const ChevronRight = makeIcon("lucide:chevron-right");
+const LinkIcon = makeIcon("lucide:link");
+const Eye = makeIcon("lucide:eye");
+const EyeOff = makeIcon("lucide:eye-off");
+const Globe = makeIcon("lucide:globe");
 import { apiFetch } from "@/lib/apiFetch";
 import { uploadToCloudinary, deleteFromCloudinary } from "@/lib/cloudinary";
 

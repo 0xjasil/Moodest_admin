@@ -11,7 +11,7 @@ import {
   LogOut,
   User,
   Users,
-} from "lucide-react";
+} from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";

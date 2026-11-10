@@ -21,7 +21,7 @@ import {
   ArrowUpRight,
   Database,
   Activity,
-} from "lucide-react";
+} from "@/components/ui/icon";
 import { ProfileHeader } from "./profile-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

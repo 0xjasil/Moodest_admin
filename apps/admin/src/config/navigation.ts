@@ -1,15 +1,23 @@
-import {
-  Home,
-  ShoppingCart,
-  Tag,
-  Users,
-  Megaphone,
-  BarChart3,
-  ScrollText,
-  Settings,
-  FileText,
-  type LucideIcon,
-} from "lucide-react";
+import React from "react";
+import { Icon } from "@iconify/react";
+
+export type IconComponent = React.ComponentType<{ className?: string; [key: string]: any }>;
+
+const makeIcon = (iconName: string): IconComponent => {
+  return function NavIcon({ className = "size-5", ...props }: { className?: string; [key: string]: any }) {
+    return React.createElement(Icon, { icon: iconName, className, ...props });
+  };
+};
+
+const Home = makeIcon("lucide:home");
+const ShoppingCart = makeIcon("lucide:shopping-cart");
+const Tag = makeIcon("lucide:tag");
+const Users = makeIcon("lucide:users");
+const Megaphone = makeIcon("lucide:megaphone");
+const BarChart3 = makeIcon("lucide:bar-chart-3");
+const ScrollText = makeIcon("lucide:scroll-text");
+const Settings = makeIcon("lucide:settings");
+const FileText = makeIcon("lucide:file-text");
 
 export type Role =
   | "super_admin"
@@ -35,7 +43,7 @@ export interface NavItem {
   id: string;
   title: string;
   href?: string;
-  icon: LucideIcon;
+  icon: IconComponent;
   badge?: string | number;
   badgeVariant?: "default" | "warning" | "destructive" | "secondary";
   children?: NavChildItem[];

@@ -3,23 +3,27 @@
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  CreditCard,
-  Gift,
-  Star,
-  Award,
-  ShoppingBag,
-  PackageCheck,
-  TrendingUp,
-  Heart,
-  Search,
-  MoreVertical,
-  Eye,
-  Pencil,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Icon } from "@iconify/react";
+
+const makeIcon = (iconName: string) => function OverviewIcon({ className }: { className?: string }) {
+  return <Icon icon={iconName} className={className} />;
+};
+
+const CreditCard = makeIcon("lucide:credit-card");
+const Gift = makeIcon("lucide:gift");
+const Star = makeIcon("lucide:star");
+const Award = makeIcon("lucide:award");
+const ShoppingBag = makeIcon("lucide:shopping-bag");
+const PackageCheck = makeIcon("lucide:package-check");
+const TrendingUp = makeIcon("lucide:trending-up");
+const Heart = makeIcon("lucide:heart");
+const Search = makeIcon("lucide:search");
+const MoreVertical = makeIcon("lucide:more-vertical");
+const Eye = makeIcon("lucide:eye");
+const Pencil = makeIcon("lucide:pencil");
+const Trash2 = makeIcon("lucide:trash-2");
+const ChevronLeft = makeIcon("lucide:chevron-left");
+const ChevronRight = makeIcon("lucide:chevron-right");
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

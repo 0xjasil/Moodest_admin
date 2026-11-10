@@ -4,25 +4,29 @@ import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import {
-  Users,
-  Package,
-  UserPlus,
-  UserCheck,
-  Search,
-  Upload,
-  Plus,
-  MoreVertical,
-  Eye,
-  Pencil,
-  Trash2,
-  Home,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  Check,
-  Download,
-} from "lucide-react";
+import { Icon } from "@iconify/react";
+
+const makeIcon = (iconName: string) => function CustIcon({ className }: { className?: string }) {
+  return <Icon icon={iconName} className={className} />;
+};
+
+const Users = makeIcon("lucide:users");
+const Package = makeIcon("lucide:package");
+const UserPlus = makeIcon("lucide:user-plus");
+const UserCheck = makeIcon("lucide:user-check");
+const Search = makeIcon("lucide:search");
+const Upload = makeIcon("lucide:upload");
+const Plus = makeIcon("lucide:plus");
+const MoreVertical = makeIcon("lucide:more-vertical");
+const Eye = makeIcon("lucide:eye");
+const Pencil = makeIcon("lucide:pencil");
+const Trash2 = makeIcon("lucide:trash-2");
+const Home = makeIcon("lucide:home");
+const ChevronLeft = makeIcon("lucide:chevron-left");
+const ChevronRight = makeIcon("lucide:chevron-right");
+const X = makeIcon("lucide:x");
+const Check = makeIcon("lucide:check");
+const Download = makeIcon("lucide:download");
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

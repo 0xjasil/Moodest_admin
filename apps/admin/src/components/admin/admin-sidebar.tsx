@@ -4,12 +4,12 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Menu,
-} from "lucide-react";
+import { Icon } from "@iconify/react";
+
+const ChevronDown = ({ className }: { className?: string }) => <Icon icon="lucide:chevron-down" className={className} />;
+const ChevronLeft = ({ className }: { className?: string }) => <Icon icon="lucide:chevron-left" className={className} />;
+const ChevronRight = ({ className }: { className?: string }) => <Icon icon="lucide:chevron-right" className={className} />;
+const Menu = ({ className }: { className?: string }) => <Icon icon="lucide:menu" className={className} />;
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import {
   Tooltip,

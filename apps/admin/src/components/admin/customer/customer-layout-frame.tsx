@@ -3,17 +3,21 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  Home,
-  User,
-  Shield,
-  MapPin,
-  Bell,
-  Trash2,
-  ShoppingCart,
-  DollarSign,
-  Tag,
-} from "lucide-react";
+import { Icon } from "@iconify/react";
+
+const makeIcon = (iconName: string) => function FrameIcon({ className }: { className?: string }) {
+  return <Icon icon={iconName} className={className} />;
+};
+
+const Home = makeIcon("lucide:home");
+const User = makeIcon("lucide:user");
+const Shield = makeIcon("lucide:shield");
+const MapPin = makeIcon("lucide:map-pin");
+const Bell = makeIcon("lucide:bell");
+const Trash2 = makeIcon("lucide:trash-2");
+const ShoppingCart = makeIcon("lucide:shopping-cart");
+const DollarSign = makeIcon("lucide:dollar-sign");
+const Tag = makeIcon("lucide:tag");
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

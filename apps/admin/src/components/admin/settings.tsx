@@ -2,7 +2,24 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { User, Lock, Eye, EyeOff, Check, X, Mail, Phone, UploadCloud, Sparkles, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Icon } from "@iconify/react";
+
+const makeIcon = (iconName: string) => function SettingsIcon({ className }: { className?: string }) {
+  return <Icon icon={iconName} className={className} />;
+};
+
+const User = makeIcon("lucide:user");
+const Lock = makeIcon("lucide:lock");
+const Eye = makeIcon("lucide:eye");
+const EyeOff = makeIcon("lucide:eye-off");
+const Check = makeIcon("lucide:check");
+const X = makeIcon("lucide:x");
+const Mail = makeIcon("lucide:mail");
+const Phone = makeIcon("lucide:phone");
+const UploadCloud = makeIcon("lucide:upload-cloud");
+const Sparkles = makeIcon("lucide:sparkles");
+const CheckCircle2 = makeIcon("lucide:check-circle-2");
+const RefreshCw = makeIcon("lucide:refresh-cw");
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -14,7 +14,7 @@ import {
   LogOut,
   FileText,
   Save,
-} from "lucide-react";
+} from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";

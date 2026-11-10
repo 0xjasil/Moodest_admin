@@ -8,16 +8,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import {
-  UploadCloud,
-  CheckCircle2,
-  RefreshCw,
-  ExternalLink,
-  Layers,
-  Sparkles,
-  Smartphone,
-  Monitor
-} from "lucide-react";
+import { Icon } from "@iconify/react";
+
+const makeIcon = (iconName: string) => function GalleryIcon({ className }: { className?: string }) {
+  return <Icon icon={iconName} className={className} />;
+};
+
+const UploadCloud = makeIcon("lucide:upload-cloud");
+const CheckCircle2 = makeIcon("lucide:check-circle-2");
+const RefreshCw = makeIcon("lucide:refresh-cw");
+const ExternalLink = makeIcon("lucide:external-link");
+const Layers = makeIcon("lucide:layers");
+const Sparkles = makeIcon("lucide:sparkles");
+const Smartphone = makeIcon("lucide:smartphone");
+const Monitor = makeIcon("lucide:monitor");
 import { apiFetch } from "@/lib/apiFetch";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 

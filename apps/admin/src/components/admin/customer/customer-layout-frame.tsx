@@ -1,23 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Icon } from "@iconify/react";
-
-const makeIcon = (iconName: string) => function FrameIcon({ className }: { className?: string }) {
-  return <Icon icon={iconName} className={className} />;
-};
-
-const Home = makeIcon("lucide:home");
-const User = makeIcon("lucide:user");
-const Shield = makeIcon("lucide:shield");
-const MapPin = makeIcon("lucide:map-pin");
-const Bell = makeIcon("lucide:bell");
-const Trash2 = makeIcon("lucide:trash-2");
-const ShoppingCart = makeIcon("lucide:shopping-cart");
-const DollarSign = makeIcon("lucide:dollar-sign");
-const Tag = makeIcon("lucide:tag");
+import { useRouter, useParams } from "next/navigation";
+import Image from "next/image";
+import {
+  Home,
+  User,
+  ShieldCheck,
+  MapPin,
+  Mail,
+  Phone,
+  Trash2,
+  ShoppingCart,
+  DollarSign,
+  Edit,
+  ArrowLeft,
+  Calendar,
+} from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +41,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface CustomerLayoutFrameProps {
   currentTab: "overview" | "security" | "address-billing" | "notifications";
@@ -54,8 +55,10 @@ export function CustomerLayoutFrame({
   children,
 }: CustomerLayoutFrameProps) {
   const router = useRouter();
+  const params = useParams();
+  const customerIdParam = params?.id as string | undefined;
 
-  // Shared Customer State (Modest Abaya Store Client)
+  // Shared Customer State
   const [customer, setCustomer] = useState({
     name: "Fatima Al-Zahra",
     customerId: "#100001",
@@ -81,6 +84,47 @@ export function CustomerLayoutFrame({
     country: customer.country,
     status: customer.status,
   });
+
+  useEffect(() => {
+    if (!customerIdParam) return;
+    const fetchCustomer = async () => {
+      try {
+        const res = await fetch(`/api/admin/users?limit=100`).catch(() => null);
+        if (res && res.ok) {
+          const json = await res.json();
+          const list = Array.isArray(json) ? json : (json.data || []);
+          const match = list.find((u: any) => String(u.id) === String(customerIdParam));
+          if (match) {
+            const fullName = [match.firstName, match.lastName].filter(Boolean).join(" ") || match.name || match.email;
+            setCustomer({
+              name: fullName,
+              customerId: `#${match.id}`,
+              dateJoined: match.createdAt ? new Date(match.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Jan 15, 2026",
+              avatar: match.avatar || null,
+              ordersCount: match._count?.orders ?? match.ordersCount ?? 0,
+              totalSpent: match.totalSpent ?? 0,
+              username: match.email?.split("@")[0] || "customer",
+              email: match.email || "",
+              status: (match.status as any) || "Active",
+              contact: match.phone || "+971 50 123 4567",
+              country: match.country || "United Arab Emirates",
+            });
+            setEditForm({
+              name: fullName,
+              username: match.email?.split("@")[0] || "customer",
+              email: match.email || "",
+              contact: match.phone || "+971 50 123 4567",
+              country: match.country || "United Arab Emirates",
+              status: (match.status as any) || "Active",
+            });
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch customer profile", e);
+      }
+    };
+    fetchCustomer();
+  }, [customerIdParam]);
 
   const handleSaveCustomer = (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,179 +158,145 @@ export function CustomerLayoutFrame({
           href="/customers"
           className="hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
         >
-          Customer
+          Customers
         </Link>
         <span>/</span>
         <span className="text-gray-900 dark:text-white font-medium">
-          {pageTitle}
+          {customer.name}
         </span>
       </nav>
 
-      {/* 2. Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Customer ID {customer.customerId}
-          </h1>
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">
-            {customer.dateJoined}
-          </p>
-        </div>
-
-        <Button
-          onClick={() => setIsDeleteDialogOpen(true)}
-          className="h-10 px-4 bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 dark:hover:bg-rose-950/60 border border-rose-200/80 dark:border-rose-900/30 rounded-xl text-xs sm:text-sm font-semibold shadow-2xs transition-colors self-start sm:self-auto cursor-pointer"
-        >
-          Delete Customer
-        </Button>
-      </div>
-
-      {/* 3. Sub-Navigation Tabs */}
-      <div className="flex flex-wrap items-center gap-2 pt-1 pb-2 border-b border-gray-200/70 dark:border-white/10">
-        <span
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-600 text-white shadow-xs"
-        >
-          <User className="size-4" />
-          <span>Customer Overview & Orders</span>
-        </span>
-        <Link
-          href="/customers"
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors ml-auto"
-        >
-          <span>← Back to Customers</span>
-        </Link>
-      </div>
-
-      {/* 4. 2-Column Main Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* LEFT COLUMN: Customer Profile Card & Upgrade Banner */}
-        <div className="space-y-6 lg:col-span-1">
-          {/* Customer Profile Card */}
-          <div className="rounded-2xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#141414] shadow-xs p-6 space-y-6">
-            {/* Avatar (with graceful initials fallback for any male or female customer) */}
-            <div className="flex flex-col items-center text-center">
-              <AvatarWithFallback
-                src={customer.avatar}
-                name={customer.name}
-                size={128}
-                className="size-28 sm:size-32 text-3xl font-bold rounded-2xl shadow-2xs border-2 border-white dark:border-white/10"
-              />
-
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-4">
-                {customer.name}
-              </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                Customer ID {customer.customerId}
-              </p>
-            </div>
-
-            {/* Orders & Spent KPI Pills */}
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="p-3 rounded-xl bg-gray-50/70 dark:bg-white/[0.02] border border-gray-200/70 dark:border-white/10 flex items-center gap-3">
-                <div className="size-9 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                  <ShoppingCart className="size-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">
-                    {customer.ordersCount}
-                  </p>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
-                    Orders
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-gray-50/70 dark:bg-white/[0.02] border border-gray-200/70 dark:border-white/10 flex items-center gap-3">
-                <div className="size-9 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                  <DollarSign className="size-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">
-                    ${customer.totalSpent.toLocaleString()}
-                  </p>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
-                    Spent
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Profile Details List */}
-            <div className="space-y-3 pt-4 border-t border-gray-200/70 dark:border-white/10 text-xs sm:text-sm">
-              <h3 className="font-bold text-gray-900 dark:text-white text-sm">
-                Details
-              </h3>
-
-              <div className="space-y-2.5 text-gray-600 dark:text-gray-300">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    Username:
-                  </span>
-                  <span className="text-gray-600 dark:text-gray-400">
-                    {customer.username}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    Email:
-                  </span>
-                  <span className="text-gray-600 dark:text-gray-400 truncate max-w-[170px]">
-                    {customer.email}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    Status:
-                  </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-                    {customer.status}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    Contact:
-                  </span>
-                  <span className="text-gray-600 dark:text-gray-400">
-                    {customer.contact}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    Country:
-                  </span>
-                  <span className="text-gray-600 dark:text-gray-400">
-                    {customer.country}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Edit Details Action Button */}
-            <Button
-              onClick={() => {
-                setEditForm({
-                  name: customer.name,
-                  username: customer.username,
-                  email: customer.email,
-                  contact: customer.contact,
-                  country: customer.country,
-                  status: customer.status,
-                });
-                setIsEditDialogOpen(true);
-              }}
-              className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer"
-            >
-              Edit Details
-            </Button>
+      {/* 2. Profile-style Customer Header (Matches /profile) */}
+      <div className="rounded-2xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#141414] shadow-xs overflow-hidden">
+        {/* Cover Photo Banner */}
+        <div className="relative h-44 sm:h-52 md:h-56 w-full bg-linear-to-r from-stone-900 via-neutral-800 to-stone-950 overflow-hidden">
+          <Image
+            src="/images/banner-user-profile.webp"
+            alt="Customer Cover Banner"
+            fill
+            priority
+            className="object-cover opacity-80"
+          />
+          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
+          <div className="absolute top-4 right-4 flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 backdrop-blur-md">
+              <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+              {customer.status} Customer
+            </span>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Tab specific contents */}
-        <div className="space-y-6 lg:col-span-2">{children}</div>
+        {/* Identity & Details Section */}
+        <div className="px-5 sm:px-8 pb-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 -mt-10 sm:-mt-12 md:-mt-12">
+            {/* Left: Minimal Avatar + Details */}
+            <div className="flex flex-col sm:flex-row sm:items-end gap-3.5 sm:gap-4">
+              {/* Minimal Overlapping Avatar */}
+              <div className="relative size-20 sm:size-24 rounded-full overflow-hidden border-4 border-white dark:border-[#141414] shadow-md bg-white dark:bg-zinc-800 shrink-0 ring-1 ring-black/5 dark:ring-white/10">
+                <AvatarWithFallback
+                  src={customer.avatar}
+                  name={customer.name}
+                  size={96}
+                  className="size-full rounded-full text-lg font-bold object-cover"
+                />
+              </div>
+
+              {/* Name & Meta Row */}
+              <div className="pt-1 sm:pt-0 sm:pb-1">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                    {customer.name}
+                  </h1>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40">
+                    {customer.customerId}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
+                  <span className="flex items-center gap-1.5">
+                    <ShieldCheck className="size-3.5 text-emerald-500" />
+                    Verified Client
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="size-3.5 text-indigo-500" />
+                    {customer.country}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Mail className="size-3.5 text-gray-400" />
+                    {customer.email}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Phone className="size-3.5 text-gray-400" />
+                    {customer.contact}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Quick Action Controls */}
+            <div className="pt-2 md:pt-0 md:pb-1 flex items-center gap-2 shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setEditForm({
+                    name: customer.name,
+                    username: customer.username,
+                    email: customer.email,
+                    contact: customer.contact,
+                    country: customer.country,
+                    status: customer.status,
+                  });
+                  setIsEditDialogOpen(true);
+                }}
+                className="h-8.5 px-3 rounded-xl text-xs font-semibold border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer"
+              >
+                <Edit className="size-3.5 mr-1.5" />
+                Edit Details
+              </Button>
+
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => setIsDeleteDialogOpen(true)}
+                className="h-8.5 px-3 rounded-xl text-xs font-semibold shadow-xs cursor-pointer"
+              >
+                <Trash2 className="size-3.5 mr-1.5" />
+                Delete
+              </Button>
+
+              <Link href="/customers">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8.5 px-3 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer"
+                >
+                  <ArrowLeft className="size-3.5 mr-1.5" />
+                  Back
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Navigation Tabs (Overview & Orders) */}
+          <nav className="mt-6 flex items-center gap-2 border-t border-gray-100 dark:border-white/5 pt-3.5 overflow-x-auto">
+            <span
+              className={cn(
+                "flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs sm:text-sm font-semibold transition-all duration-150 whitespace-nowrap bg-[#0070BA] text-white shadow-xs cursor-default"
+              )}
+            >
+              <User className="size-3.5" />
+              <span>Customer Overview & Orders</span>
+            </span>
+          </nav>
+        </div>
+      </div>
+
+      {/* 3. Main Page Content (Overview Metrics and Orders Table) */}
+      <div className="space-y-6">
+        {children}
       </div>
 
       {/* Edit Details Dialog */}
@@ -383,13 +393,13 @@ export function CustomerLayoutFrame({
                 type="button"
                 variant="outline"
                 onClick={() => setIsEditDialogOpen(false)}
-                className="rounded-xl text-xs h-9 px-4"
+                className="rounded-xl text-xs h-9 px-4 cursor-pointer"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="rounded-xl text-xs h-9 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+                className="rounded-xl text-xs h-9 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold cursor-pointer"
               >
                 Save Changes
               </Button>
@@ -418,12 +428,12 @@ export function CustomerLayoutFrame({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl text-xs h-9 px-4">
+            <AlertDialogCancel className="rounded-xl text-xs h-9 px-4 cursor-pointer">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteCustomer}
-              className="rounded-xl text-xs h-9 px-4 bg-rose-600 hover:bg-rose-700 text-white font-semibold"
+              className="rounded-xl text-xs h-9 px-4 bg-rose-600 hover:bg-rose-700 text-white font-semibold cursor-pointer"
             >
               Delete Customer
             </AlertDialogAction>

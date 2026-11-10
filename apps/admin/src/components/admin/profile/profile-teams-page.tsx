@@ -185,7 +185,7 @@ export function ProfileTeamsPage() {
                     <h3 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">
                       {team.name}
                     </h3>
-                    <p className="text-[11px] text-gray-400 font-medium">Moodest Boutique Operations</p>
+                    <p className="text-[11px] text-gray-400 font-medium">Modest Boutique Operations</p>
                   </div>
                 </div>
 

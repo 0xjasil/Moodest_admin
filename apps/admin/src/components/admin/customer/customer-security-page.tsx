@@ -238,7 +238,7 @@ export function CustomerSecurityPage() {
                 <span>Internal Staff Notes</span>
               </h3>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                Confidential notes visible only to Moodest boutique administrators.
+                Confidential notes visible only to Modest boutique administrators.
               </p>
             </div>
 

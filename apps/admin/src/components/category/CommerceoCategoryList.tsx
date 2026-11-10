@@ -94,7 +94,7 @@ export function CommerceoCategoryList() {
                 id: String(c.id),
                 name: c.name,
                 slug: c.slug || c.name.toLowerCase().replace(/\s+/g, "-"),
-                description: c.description || (c.parentId ? `Subcategory of #${c.parentId}` : "Moodest collection category"),
+                description: c.description || (c.parentId ? `Subcategory of #${c.parentId}` : "Modest collection category"),
                 image: c.image || "",
                 totalEarnings: c.totalEarnings || "₹0.00",
                 totalProducts: c.totalProducts || c.productCount || 0,

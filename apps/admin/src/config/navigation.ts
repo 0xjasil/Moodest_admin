@@ -122,33 +122,6 @@ export const navigationConfig: NavItem[] = [
     title: "Customers",
     href: "/customers",
     icon: Users,
-    children: [
-      {
-        id: "all-customers",
-        title: "All Customers",
-        href: "/customers",
-      },
-      {
-        id: "customer-overview",
-        title: "Customer Overview",
-        href: "/customers/overview",
-      },
-      {
-        id: "customer-security",
-        title: "Security",
-        href: "/customers/security",
-      },
-      {
-        id: "customer-address",
-        title: "Address & Billing",
-        href: "/customers/address-billing",
-      },
-      {
-        id: "customer-notifications",
-        title: "Notifications",
-        href: "/customers/notifications",
-      },
-    ],
   },
   {
     id: "marketing",
@@ -173,23 +146,6 @@ export const navigationConfig: NavItem[] = [
     title: "Analytics",
     href: "/analytics",
     icon: BarChart3,
-    children: [
-      {
-        id: "analytics-overview",
-        title: "Overview",
-        href: "/analytics",
-      },
-      {
-        id: "order-reports",
-        title: "Order Reports",
-        href: "/reports/order-reports",
-      },
-      {
-        id: "customer-reports",
-        title: "Customer Reports",
-        href: "/reports/customer-reports",
-      },
-    ],
   },
   {
     id: "logs",

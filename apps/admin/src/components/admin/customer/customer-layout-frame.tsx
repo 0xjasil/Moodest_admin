@@ -51,7 +51,7 @@ export function CustomerLayoutFrame({
 }: CustomerLayoutFrameProps) {
   const router = useRouter();
 
-  // Shared Customer State (Moodest Abaya Store Client)
+  // Shared Customer State (Modest Abaya Store Client)
   const [customer, setCustomer] = useState({
     name: "Fatima Al-Zahra",
     customerId: "#100001",
@@ -139,52 +139,17 @@ export function CustomerLayoutFrame({
 
       {/* 3. Sub-Navigation Tabs */}
       <div className="flex flex-wrap items-center gap-2 pt-1 pb-2 border-b border-gray-200/70 dark:border-white/10">
-        <Link
-          href="/customers/overview"
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
-            currentTab === "overview"
-              ? "bg-indigo-600 text-white shadow-xs"
-              : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5"
-          }`}
+        <span
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-600 text-white shadow-xs"
         >
           <User className="size-4" />
-          <span>Overview</span>
-        </Link>
-
+          <span>Customer Overview & Orders</span>
+        </span>
         <Link
-          href="/customers/security"
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
-            currentTab === "security"
-              ? "bg-indigo-600 text-white shadow-xs"
-              : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5"
-          }`}
+          href="/customers"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors ml-auto"
         >
-          <Shield className="size-4" />
-          <span>Security</span>
-        </Link>
-
-        <Link
-          href="/customers/address-billing"
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
-            currentTab === "address-billing"
-              ? "bg-indigo-600 text-white shadow-xs"
-              : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5"
-          }`}
-        >
-          <MapPin className="size-4" />
-          <span>Address & Billing</span>
-        </Link>
-
-        <Link
-          href="/customers/notifications"
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
-            currentTab === "notifications"
-              ? "bg-indigo-600 text-white shadow-xs"
-              : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5"
-          }`}
-        >
-          <Bell className="size-4" />
-          <span>Notifications</span>
+          <span>← Back to Customers</span>
         </Link>
       </div>
 

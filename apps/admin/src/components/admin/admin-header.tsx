@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -87,6 +88,19 @@ const pageMap: Record<string, PageInfo> = {
 export function AdminHeader({ className }: AdminHeaderProps) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const [customAvatar, setCustomAvatar] = useState<string | null>(null);
+
+  useEffect(() => {
+    const syncAvatar = () => {
+      try {
+        const stored = localStorage.getItem("admin_avatar");
+        if (stored) setCustomAvatar(stored);
+      } catch {}
+    };
+    syncAvatar();
+    window.addEventListener("admin_avatar_updated", syncAvatar);
+    return () => window.removeEventListener("admin_avatar_updated", syncAvatar);
+  }, []);
   
   // Get current page info or default to dashboard
   const currentPage = pageMap[pathname] || pageMap["/"];
@@ -95,7 +109,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const displayName = user
     ? [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email.split("@")[0]
     : "Admin";
-  const userAvatar = user?.avatar || user?.image || null;
+  const userAvatar = customAvatar || user?.avatar || user?.image || "/images/avatars/1.webp";
 
   return (
     <header className={cn(

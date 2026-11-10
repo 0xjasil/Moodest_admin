@@ -398,7 +398,7 @@ export function CustomerListPage() {
           <div className="flex items-center justify-between pr-0 md:pr-6">
             <div>
               <p className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                15,678
+                {customers.length.toLocaleString()}
               </p>
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">
                 Total Customers
@@ -413,10 +413,13 @@ export function CustomerListPage() {
           <div className="flex items-center justify-between md:border-l border-gray-200/70 dark:border-white/10 md:pl-6">
             <div>
               <p className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                $75
+                ${(
+                  customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0) /
+                  Math.max(1, customers.reduce((sum, c) => sum + (c.ordersCount || 0), 0))
+                ).toFixed(2)}
               </p>
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">
-                Average Order
+                Average Order Value
               </p>
             </div>
             <div className="size-11 rounded-xl bg-gray-100 dark:bg-white/5 border border-gray-200/80 dark:border-white/10 flex items-center justify-center text-gray-700 dark:text-gray-300 shadow-2xs">
@@ -425,14 +428,14 @@ export function CustomerListPage() {
           </div>
 
           {/* Divider on MD: bottom rows */}
-          {/* Bottom Left: New Customers */}
+          {/* Bottom Left: Total Orders */}
           <div className="flex items-center justify-between pt-6 border-t border-gray-200/70 dark:border-white/10 pr-0 md:pr-6">
             <div>
               <p className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                560
+                {customers.reduce((sum, c) => sum + (c.ordersCount || 0), 0).toLocaleString()}
               </p>
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">
-                New Customers
+                Total Orders Placed
               </p>
             </div>
             <div className="size-11 rounded-xl bg-gray-100 dark:bg-white/5 border border-gray-200/80 dark:border-white/10 flex items-center justify-center text-gray-700 dark:text-gray-300 shadow-2xs">
@@ -444,7 +447,7 @@ export function CustomerListPage() {
           <div className="flex items-center justify-between pt-6 border-t md:border-l border-gray-200/70 dark:border-white/10 md:pl-6">
             <div>
               <p className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                3,432
+                {customers.filter((c) => c.status === "Active").length.toLocaleString()}
               </p>
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">
                 Active Customers

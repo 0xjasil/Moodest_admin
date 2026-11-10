@@ -305,7 +305,6 @@ function AnalyticsPage() {
     { value: "30d", label: "Last 30 days" },
     { value: "90d", label: "Last 3 months" },
     { value: "1y", label: "Last year" },
-    { value: "custom", label: "Custom range" },
   ];
 
   const getStatusColor = (status: string) => {

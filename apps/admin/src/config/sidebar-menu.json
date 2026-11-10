@@ -116,6 +116,11 @@
               "id": "banners",
               "title": "Banners",
               "href": "/banners"
+            },
+            {
+              "id": "gallery",
+              "title": "Visual Gallery",
+              "href": "/gallery"
             }
           ]
         },

@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
+import { apiFetch } from "@/lib/apiFetch";
 
 const makeIcon = (iconName: string) => function OverviewIcon({ className }: { className?: string }) {
   return <Icon icon={iconName} className={className} />;
@@ -55,68 +56,84 @@ import { toast } from "sonner";
 import { CustomerLayoutFrame } from "./customer-layout-frame";
 
 interface CustomerOrder {
-  id: string; // e.g. "#5434"
+  id: string; // e.g. "#ORD-..."
   rawId: string;
   date: string;
-  status: "Dispatched" | "Out for Delivery" | "Delivered" | "Cancelled" | "Ready to Pickup";
+  status: string;
   spent: number;
 }
 
-const INITIAL_ORDERS: CustomerOrder[] = [
-  {
-    id: "#1024",
-    rawId: "ORD-1024",
-    date: "May 10, 2026",
-    status: "Delivered",
-    spent: 245.0,
-  },
-  {
-    id: "#1018",
-    rawId: "ORD-1018",
-    date: "Apr 18, 2026",
-    status: "Delivered",
-    spent: 310.0,
-  },
-  {
-    id: "#1011",
-    rawId: "ORD-1011",
-    date: "Mar 22, 2026",
-    status: "Delivered",
-    spent: 195.0,
-  },
-  {
-    id: "#1005",
-    rawId: "ORD-1005",
-    date: "Feb 14, 2026",
-    status: "Delivered",
-    spent: 180.0,
-  },
-  {
-    id: "#1002",
-    rawId: "ORD-1002",
-    date: "Jan 28, 2026",
-    status: "Delivered",
-    spent: 270.0,
-  },
-  {
-    id: "#1001",
-    rawId: "ORD-1001",
-    date: "Jan 15, 2026",
-    status: "Delivered",
-    spent: 220.0,
-  },
-];
-
 export function CustomerOverviewPage() {
   const router = useRouter();
+  const params = useParams();
+  const customerIdParam = params?.id as string | undefined;
 
   // Orders Datagrid State
-  const [orders, setOrders] = useState<CustomerOrder[]>(INITIAL_ORDERS);
+  const [orders, setOrders] = useState<CustomerOrder[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
   const [searchOrder, setSearchOrder] = useState("");
   const [pageSize, setPageSize] = useState<number>(5);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const [deleteOrderTarget, setDeleteOrderTarget] = useState<CustomerOrder | null>(null);
+
+  useEffect(() => {
+    if (!customerIdParam) {
+      setLoadingOrders(false);
+      return;
+    }
+    const loadOrders = async () => {
+      try {
+        setLoadingOrders(true);
+        const res = await apiFetch(`/api/admin/orders?limit=100`);
+        if (!res.ok) {
+          setOrders([]);
+          return;
+        }
+        const json = await res.json();
+        const rawOrders: any[] = Array.isArray(json)
+          ? json
+          : json.data || json.items || [];
+        const customerOrders: CustomerOrder[] = rawOrders
+          .filter((o) => String(o.userId) === String(customerIdParam))
+          .map((o) => {
+            const rawStatus = String(o.status || o.orderStatus || "PENDING");
+            const formattedStatus =
+              rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase();
+            return {
+              id: o.orderNumber ? `#${o.orderNumber}` : `#${String(o.id).slice(-6).toUpperCase()}`,
+              rawId: String(o.id),
+              date: o.createdAt
+                ? new Date(o.createdAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : "—",
+              status: formattedStatus,
+              spent: Number(o.totalAmount ?? o.total ?? 0),
+            };
+          });
+        setOrders(customerOrders);
+      } catch {
+        setOrders([]);
+      } finally {
+        setLoadingOrders(false);
+      }
+    };
+    loadOrders();
+  }, [customerIdParam]);
+
+  const nonCancelledOrders = useMemo(
+    () => orders.filter((o) => o.status.toUpperCase() !== "CANCELLED"),
+    [orders]
+  );
+  const lifetimeSpent = useMemo(
+    () => nonCancelledOrders.reduce((sum, o) => sum + (o.spent || 0), 0),
+    [nonCancelledOrders]
+  );
+  const completedCount = nonCancelledOrders.length;
+  const averageOrderValue = completedCount > 0 ? lifetimeSpent / completedCount : 0;
 
   // Filtered orders
   const filteredOrders = useMemo(() => {
@@ -224,7 +241,7 @@ export function CustomerOverviewPage() {
               </h4>
               <div className="flex items-baseline gap-1.5 mt-1">
                 <span className="text-xl font-bold text-stone-900 dark:text-stone-100">
-                  $1,420.00
+                  ₹{lifetimeSpent.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
                   Total
@@ -244,18 +261,18 @@ export function CustomerOverviewPage() {
 
             <div>
               <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                Orders Completed
+                Orders Placed
               </h4>
               <div className="flex items-baseline gap-1.5 mt-1">
                 <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
-                  6
+                  {completedCount}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
                   Orders
                 </span>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Fulfilled and delivered to customer
+                Active &amp; fulfilled customer orders
               </p>
             </div>
           </div>
@@ -272,7 +289,7 @@ export function CustomerOverviewPage() {
               </h4>
               <div className="flex items-baseline gap-1.5 mt-1">
                 <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                  $236.67
+                  ₹{averageOrderValue.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
                   / order
@@ -292,18 +309,18 @@ export function CustomerOverviewPage() {
 
             <div>
               <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                Saved to Wishlist
+                Total Orders Logged
               </h4>
               <div className="flex items-baseline gap-1.5 mt-1">
                 <span className="text-xl font-bold text-rose-600 dark:text-rose-400">
-                  4
+                  {orders.length}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                  Items
+                  Records
                 </span>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Saved styles from new collections
+                Total order records in account history
               </p>
             </div>
           </div>
@@ -373,13 +390,24 @@ export function CustomerOverviewPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-white/5">
-                {paginatedOrders.length === 0 ? (
+                {loadingOrders ? (
                   <tr>
                     <td
                       colSpan={6}
                       className="py-10 text-center text-xs text-gray-500 dark:text-gray-400"
                     >
-                      No orders matching &quot;{searchOrder}&quot;.
+                      Loading customer orders...
+                    </td>
+                  </tr>
+                ) : paginatedOrders.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="py-10 text-center text-xs text-gray-500 dark:text-gray-400"
+                    >
+                      {searchOrder.trim()
+                        ? `No orders matching "${searchOrder}".`
+                        : "This customer has not placed any orders yet."}
                     </td>
                   </tr>
                 ) : (
@@ -422,7 +450,7 @@ export function CustomerOverviewPage() {
                         </td>
 
                         <td className="px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 dark:text-white whitespace-nowrap">
-                          ${order.spent.toFixed(2)}
+                          ₹{order.spent.toFixed(2)}
                         </td>
 
                         <td className="w-16 px-4 py-3.5 text-right pr-5">

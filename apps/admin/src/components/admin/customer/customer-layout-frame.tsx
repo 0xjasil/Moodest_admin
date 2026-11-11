@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface CustomerLayoutFrameProps {
   currentTab: "overview" | "security" | "address-billing" | "notifications";
@@ -60,17 +61,17 @@ export function CustomerLayoutFrame({
 
   // Shared Customer State
   const [customer, setCustomer] = useState({
-    name: "Fatima Al-Zahra",
-    customerId: "#100001",
-    dateJoined: "Jan 15, 2026",
+    name: "Customer Profile",
+    customerId: customerIdParam ? `#${String(customerIdParam).slice(-6).toUpperCase()}` : "—",
+    dateJoined: "—",
     avatar: null as string | null,
-    ordersCount: 6,
-    totalSpent: 1420,
-    username: "fatima.alzahra",
-    email: "fatima.alzahra@example.com",
+    ordersCount: 0,
+    totalSpent: 0,
+    username: "customer",
+    email: "—",
     status: "Active",
-    contact: "+971 50 123 4567",
-    country: "United Arab Emirates",
+    contact: "—",
+    country: "India",
   });
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -89,33 +90,66 @@ export function CustomerLayoutFrame({
     if (!customerIdParam) return;
     const fetchCustomer = async () => {
       try {
-        const res = await fetch(`/api/admin/users?limit=100`).catch(() => null);
+        const [res, ordersRes] = await Promise.all([
+          apiFetch(`/api/admin/users?limit=100`).catch(() => null),
+          apiFetch(`/api/admin/orders?limit=100`).catch(() => null),
+        ]);
+
+        let computedOrdersCount = 0;
+        let computedTotalSpent = 0;
+        if (ordersRes && ordersRes.ok) {
+          const ordersJson = await ordersRes.json();
+          const ordersList = Array.isArray(ordersJson)
+            ? ordersJson
+            : ordersJson.data || ordersJson.items || [];
+          for (const ord of ordersList) {
+            if (String(ord.userId) !== String(customerIdParam)) continue;
+            computedOrdersCount += 1;
+            const st = String(ord.status || ord.orderStatus || "").toUpperCase();
+            const amt = Number(ord.totalAmount ?? ord.total ?? 0);
+            if (st !== "CANCELLED" && !Number.isNaN(amt)) {
+              computedTotalSpent += amt;
+            }
+          }
+        }
+
         if (res && res.ok) {
           const json = await res.json();
-          const list = Array.isArray(json) ? json : (json.data || []);
+          const list = Array.isArray(json) ? json : (json.data || json.items || []);
           const match = list.find((u: any) => String(u.id) === String(customerIdParam));
           if (match) {
-            const fullName = [match.firstName, match.lastName].filter(Boolean).join(" ") || match.name || match.email;
+            const fullName =
+              [match.firstName, match.lastName].filter(Boolean).join(" ") ||
+              match.name ||
+              match.email;
+            const formattedId = `#${String(match.id).slice(-6).toUpperCase()}`;
+            const statusLabel = match.isActive === false ? "Inactive" : (match.status as string) || "Active";
             setCustomer({
               name: fullName,
-              customerId: `#${match.id}`,
-              dateJoined: match.createdAt ? new Date(match.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Jan 15, 2026",
+              customerId: formattedId,
+              dateJoined: match.createdAt
+                ? new Date(match.createdAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : "—",
               avatar: match.avatar || null,
-              ordersCount: match._count?.orders ?? match.ordersCount ?? 0,
-              totalSpent: match.totalSpent ?? 0,
+              ordersCount: match._count?.orders ?? match.ordersCount ?? computedOrdersCount,
+              totalSpent: match.totalSpent ?? computedTotalSpent,
               username: match.email?.split("@")[0] || "customer",
               email: match.email || "",
-              status: (match.status as any) || "Active",
-              contact: match.phone || "+971 50 123 4567",
-              country: match.country || "United Arab Emirates",
+              status: statusLabel,
+              contact: match.phone || "—",
+              country: match.country || "India",
             });
             setEditForm({
               name: fullName,
               username: match.email?.split("@")[0] || "customer",
               email: match.email || "",
-              contact: match.phone || "+971 50 123 4567",
-              country: match.country || "United Arab Emirates",
-              status: (match.status as any) || "Active",
+              contact: match.phone || "",
+              country: match.country || "India",
+              status: statusLabel,
             });
           }
         }

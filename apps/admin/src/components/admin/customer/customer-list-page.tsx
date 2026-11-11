@@ -72,7 +72,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { API_URL } from "@/lib/api-client";
+import { apiFetch } from "@/lib/apiFetch";
 import { AvatarWithFallback } from "@/components/ui/avatar-with-fallback";
 
 export interface CustomerItem {
@@ -102,6 +102,8 @@ interface BackendRawUser {
   name?: string;
   email: string;
   phone?: string;
+  role?: string;
+  isActive?: boolean;
   avatar?: string;
   country?: string;
   ordersCount?: number;
@@ -115,6 +117,23 @@ interface BackendRawUser {
   _count?: { orders?: number };
 }
 
+interface BackendRawOrder {
+  userId?: string | number;
+  status?: string;
+  orderStatus?: string;
+  total?: number | string;
+  totalAmount?: number | string;
+}
+
+function formatCustomerCode(id: number | string, idx: number): string {
+  const num = Number(id);
+  if (!Number.isNaN(num) && Number.isFinite(num)) {
+    return `#${100000 + num}`;
+  }
+  const str = String(id || idx + 1).trim();
+  return `#${str.slice(-6).toUpperCase()}`;
+}
+
 export function CustomerListPage() {
   const router = useRouter();
 
@@ -126,40 +145,71 @@ export function CustomerListPage() {
     const fetchCustomers = async () => {
       try {
         setLoading(true);
-        // Use same-origin proxy to prevent CORS issues
-        const res = await fetch(`/api/admin/users?limit=100`).catch(() =>
-          fetch(`${API_URL}/admin/users?limit=100`)
-        );
-        if (res.ok) {
-          const json = await res.json();
-          const list: BackendRawUser[] = Array.isArray(json) ? json : (json.data || []);
-          if (list.length > 0) {
-            const mapped: CustomerItem[] = list.map((u: BackendRawUser, idx: number) => {
-              const fullName = [u.firstName, u.lastName].filter(Boolean).join(" ") || u.name || u.email;
+        const [usersRes, ordersRes] = await Promise.all([
+          apiFetch(`/api/admin/users?limit=100`),
+          apiFetch(`/api/admin/orders?limit=100`).catch(() => null),
+        ]);
+
+        const orderStats = new Map<string, { count: number; spent: number }>();
+        if (ordersRes && ordersRes.ok) {
+          const ordersJson = await ordersRes.json();
+          const ordersList: BackendRawOrder[] = Array.isArray(ordersJson)
+            ? ordersJson
+            : ordersJson.data || ordersJson.items || [];
+          for (const ord of ordersList) {
+            const uid = ord.userId ? String(ord.userId) : "";
+            if (!uid) continue;
+            const prev = orderStats.get(uid) || { count: 0, spent: 0 };
+            const status = String(ord.status || ord.orderStatus || "").toUpperCase();
+            const amount = Number(ord.totalAmount ?? ord.total ?? 0);
+            prev.count += 1;
+            if (status !== "CANCELLED" && !Number.isNaN(amount)) {
+              prev.spent += amount;
+            }
+            orderStats.set(uid, prev);
+          }
+        }
+
+        if (usersRes.ok) {
+          const json = await usersRes.json();
+          const list: BackendRawUser[] = Array.isArray(json)
+            ? json
+            : json.data || json.items || [];
+          const customerUsers = list.filter(
+            (u) => !u.role || u.role.toUpperCase() === "CUSTOMER"
+          );
+
+          const mapped: CustomerItem[] = customerUsers.map(
+            (u: BackendRawUser, idx: number) => {
+              const fullName =
+                [u.firstName, u.lastName].filter(Boolean).join(" ") ||
+                u.name ||
+                u.email.split("@")[0] ||
+                "Customer";
+              const stats = orderStats.get(String(u.id));
               return {
                 id: String(u.id),
-                customerId: `#${100000 + Number(u.id || idx + 1)}`,
+                customerId: formatCustomerCode(u.id, idx),
                 name: fullName,
                 email: u.email,
-                phone: u.phone || "+971 50 123 4567",
+                phone: u.phone || "—",
                 avatar: u.avatar || undefined,
-                country: u.country || "United Arab Emirates",
-                ordersCount: u.ordersCount || u._count?.orders || 0,
-                totalSpent: u.totalSpent || 0,
-                status: "Active",
+                country: u.country || "India",
+                ordersCount: u.ordersCount ?? u._count?.orders ?? stats?.count ?? 0,
+                totalSpent: u.totalSpent ?? stats?.spent ?? 0,
+                status: u.isActive === false ? "Inactive" : "Active",
                 addressLine1: u.addressLine1 || "",
                 town: u.town || "",
                 state: u.state || "",
                 postcode: u.postcode || "",
-                createdAt: u.createdAt ? u.createdAt.split("T")[0] : new Date().toISOString().split("T")[0],
+                createdAt: u.createdAt
+                  ? u.createdAt.split("T")[0]
+                  : new Date().toISOString().split("T")[0],
               };
-            });
-            setCustomers(mapped);
-            return;
-          } else {
-            setCustomers([]);
-            return;
-          }
+            }
+          );
+          setCustomers(mapped);
+          return;
         }
         setCustomers([]);
       } catch (err) {
@@ -417,7 +467,7 @@ export function CustomerListPage() {
           <div className="flex items-center justify-between md:border-l border-gray-200/70 dark:border-white/10 md:pl-6">
             <div>
               <p className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                ${(
+                ₹{(
                   customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0) /
                   Math.max(1, customers.reduce((sum, c) => sum + (c.ordersCount || 0), 0))
                 ).toFixed(2)}
@@ -591,7 +641,9 @@ export function CustomerListPage() {
                     colSpan={7}
                     className="py-12 text-center text-sm text-gray-500 dark:text-gray-400"
                   >
-                    No customers found matching &quot;{searchQuery}&quot;.
+                    {searchQuery.trim()
+                      ? `No customers found matching "${searchQuery}".`
+                      : "No registered customers found yet."}
                   </td>
                 </tr>
               ) : (
@@ -658,7 +710,7 @@ export function CustomerListPage() {
 
                       {/* Total Spent */}
                       <td className="px-3 py-3.5 text-sm font-semibold text-gray-900 dark:text-white whitespace-nowrap">
-                        ${customer.totalSpent.toLocaleString(undefined, {
+                        ₹{customer.totalSpent.toLocaleString("en-IN", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}

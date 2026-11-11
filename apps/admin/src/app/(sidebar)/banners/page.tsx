@@ -403,7 +403,9 @@ export default function AdminBannersPage() {
       const res = await apiFetch("/banners?all=true");
       if (res.ok) {
         const json = await res.json();
-        const data = Array.isArray(json) ? json : json.data || json.banners || [];
+        const data = (Array.isArray(json) ? json : json.data || json.banners || []).filter(
+          (b: Banner) => !(b.tag?.toUpperCase().startsWith("GALLERY_") || b.alt?.toUpperCase().startsWith("GALLERY_"))
+        );
         setBanners(data);
       }
     } catch (e) {

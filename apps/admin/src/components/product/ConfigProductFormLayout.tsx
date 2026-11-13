@@ -6,7 +6,6 @@ import ProductFormSection from "../AddProductForm";
 import AbayaVariantsManager from "./AbayaVariantsManager";
 import ProductImageAndCategories from "./configurable-product";
 import { useRouter } from "next/navigation";
-import { VariationTemplatePickerInline } from "@/components/variations/VariationPicker";
 import {
   ConfigurableProductProvider,
   useConfigurableProduct,
@@ -327,7 +326,6 @@ function ProductFormContent({}: ProductFormContentProps) {
         </div>
       </div>
 
-      <VariationTemplatePickerInline />
       <AbayaVariantsManager mode="create" backendSkuError={backendSkuError} />
     </div>
   );
@@ -336,8 +334,8 @@ function ProductFormContent({}: ProductFormContentProps) {
 function ProductFormLayout({ isSimpleProduct }: { isSimpleProduct?: boolean }) {
   return (
     <ConfigurableProductProvider>
-        <ProductFormContent isSimpleProduct={!!isSimpleProduct} />
-      </ConfigurableProductProvider>
+      <ProductFormContent isSimpleProduct={!!isSimpleProduct} />
+    </ConfigurableProductProvider>
   );
 }
 

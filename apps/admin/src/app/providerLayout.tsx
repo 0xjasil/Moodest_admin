@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { ConfigurableProductProvider } from "@/context/ConfigurableProductContext";
+import { VariationTemplatesProvider } from "@/context/VariationTemplatesContext";
 
 export default function ProvidersLayout({
   children,
@@ -8,8 +9,8 @@ export default function ProvidersLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ConfigurableProductProvider>
-      {children}
-    </ConfigurableProductProvider>
+    <VariationTemplatesProvider>
+      <ConfigurableProductProvider>{children}</ConfigurableProductProvider>
+    </VariationTemplatesProvider>
   );
 }

@@ -11,6 +11,7 @@ import EditProductFormSection from "./EditProductForm";
 import EditProductImageAndCategories from "./EditProductImageAndCategories";
 import AbayaVariantsManager from "./AbayaVariantsManager";
 import { apiFetch } from "@/lib/apiFetch";
+import { VariationTemplatePickerInline } from "@/components/variations/VariationPicker";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
 interface EditProductLayoutProps {
@@ -449,6 +450,7 @@ function EditProductFormContent({ productId }: { productId: string }) {
         </div>
       </div>
 
+      <VariationTemplatePickerInline />
       <AbayaVariantsManager mode="edit" backendSkuError={backendSkuError} />
     </div>
   );
@@ -456,8 +458,8 @@ function EditProductFormContent({ productId }: { productId: string }) {
 
 export default function EditProductLayout({ productId }: EditProductLayoutProps) {
   return (
-    <EditProductProvider>
-      <EditProductFormContent productId={productId} />
-    </EditProductProvider>
+      <EditProductProvider>
+        <EditProductFormContent productId={productId} />
+      </EditProductProvider>
   );
 }

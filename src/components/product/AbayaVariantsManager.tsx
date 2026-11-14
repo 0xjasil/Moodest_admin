@@ -430,10 +430,15 @@ function AbayaVariantsManagerUI({
   const handleSaveModalVariant = () => {
     const errors: { [key: string]: string } = {};
 
-    // 1. Size
-    const finalSize = formSizeType === "free" ? "Free Size" : formSize.trim();
-    if (!finalSize) {
-      errors.size = "Abaya size is required.";
+    // 1. Size — required unless this is a color-only product
+    const finalSize =
+      variationMode === "color"
+        ? "Free Size"
+        : formSizeType === "free"
+        ? "Free Size"
+        : formSize.trim();
+    if (variationMode !== "color" && !finalSize) {
+      errors.size = "Size is required.";
     }
 
     // 2. Color
@@ -2077,7 +2082,7 @@ function EditAbayaVariantsWrapper(props: { backendSkuError?: string | null }) {
   const variants: AbayaVariantItem[] = useMemo(() => {
     return (ctx.variants || []).map((v) => ({
       id: v.id,
-      size: v.size || (v.attributes?.[0]?.value) || "54",
+      size: v.size || (v.attributes?.[0]?.value) || "",
       color: v.color || (v.attributes?.[1]?.value) || "",
       colorHex: v.colorHex || null,
       sku: v.sku || `MDS-TEMP-${v.id}`,
@@ -2110,7 +2115,11 @@ function EditAbayaVariantsWrapper(props: { backendSkuError?: string | null }) {
             qty: u.qty,
             isActive: u.isActive,
             isNew: !!u.isNew,
-            isModified: !u.isNew,
+            // Preserve isModified from the item — only mark modified when
+            // the item itself signals it, don't derive from !isNew which
+            // would incorrectly mark all existing variants as modified on
+            // every setVariants call.
+            isModified: !!u.isModified,
             image: u.image || null,
             images: [],
             reservations: u.reservations,

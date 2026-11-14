@@ -100,10 +100,8 @@ function ProductFormContent({}: ProductFormContentProps) {
       // 5. Individual Variant Field Validations
       for (let i = 0; i < variants.length; i++) {
         const v = variants[i];
-        if (!v.size) {
-          toast.error(`Variant #${i + 1}: Size is required.`);
-          return;
-        }
+        // Size is required UNLESS this is a color-only variant (empty size is treated as "Free Size")
+        const effectiveSize = (v.size || "").trim() || "Free Size";
         const priceNum = typeof v.price === "number" ? v.price : parseFloat(String(v.price));
         if (isNaN(priceNum) || priceNum <= 0) {
           toast.error(`Variant #${i + 1} (${v.sku}): Price must be greater than 0.`);
@@ -125,6 +123,8 @@ function ProductFormContent({}: ProductFormContentProps) {
           toast.error(`Variant #${i + 1} (${v.sku}): Stock quantity must be a non-negative whole integer.`);
           return;
         }
+        // Suppress unused variable warning
+        void effectiveSize;
       }
 
       // 6. Upload Primary Thumbnail, Hover Thumbnail, and Gallery Images to Cloudinary CDN
@@ -182,7 +182,7 @@ function ProductFormContent({}: ProductFormContentProps) {
         }
 
         processedVariants.push({
-          size: v.size,
+          size: (v.size || "").trim() || "Free Size",
           color: v.color || "",
           colorHex: v.colorHex || null,
           sku: v.sku.trim(),
@@ -271,7 +271,7 @@ function ProductFormContent({}: ProductFormContentProps) {
           await apiFetch(`/products/${prodId}/variants`, {
             method: "POST",
             body: JSON.stringify({
-              size: v.size,
+              size: (v.size || "").trim() || "Free Size",
               color: v.color || "",
               colorHex: v.colorHex || null,
               image: variantImageUrl,

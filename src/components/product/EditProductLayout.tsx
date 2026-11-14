@@ -202,10 +202,7 @@ function EditProductFormContent({ productId }: { productId: string }) {
       // 4. Individual Variant Field Validations
       for (let i = 0; i < variants.length; i++) {
         const v = variants[i];
-        if (!v.size) {
-          toast.error(`Variant #${i + 1}: Size is required.`);
-          return;
-        }
+        // Allow empty size for color-only variants — treat as "Free Size"
         const priceNum = typeof v.price === "number" ? v.price : parseFloat(String(v.price));
         if (isNaN(priceNum) || priceNum <= 0) {
           toast.error(`Variant #${i + 1} (${v.sku}): Price must be greater than 0.`);
@@ -277,7 +274,7 @@ function EditProductFormContent({ productId }: { productId: string }) {
         }
         processedVariants.push({
           id: v.isNew ? undefined : v.id, // Preserve existing variant ID
-          size: v.size,
+          size: (v.size || "").trim() || "Free Size",
           color: v.color || "",
           colorHex: v.colorHex || null,
           sku: v.sku.trim(),
@@ -366,7 +363,7 @@ function EditProductFormContent({ productId }: { productId: string }) {
           await apiFetch(`/products/${productId}/variants`, {
             method: "POST",
             body: JSON.stringify({
-              size: v.size,
+              size: (v.size || "").trim() || "Free Size",
               color: v.color || "",
               colorHex: v.colorHex || null,
               image: variantImageUrl,
@@ -385,7 +382,7 @@ function EditProductFormContent({ productId }: { productId: string }) {
           await apiFetch(`/products/${productId}/variants/${v.id}`, {
             method: "PATCH",
             body: JSON.stringify({
-              size: v.size,
+              size: (v.size || "").trim() || "Free Size",
               color: v.color || "",
               colorHex: v.colorHex || null,
               image: variantImageUrl,

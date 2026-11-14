@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
 const Loader2 = ({ className }: { className?: string }) => <Icon icon="lucide:loader-2" className={className} />;
@@ -18,6 +19,7 @@ interface EditProductLayoutProps {
 }
 
 function EditProductFormContent({ productId }: { productId: string }) {
+  const router = useRouter();
   const {
     baseProduct,
     variants,
@@ -401,6 +403,8 @@ function EditProductFormContent({ productId }: { productId: string }) {
       }
 
       toast.success("Abaya product and Cloudinary CDN images updated successfully!", { id: "edit-prod-save" });
+      router.push("/products");
+      router.refresh();
     } catch (error) {
       console.error("Error updating product:", error);
       // PRESERVE FORM DATA: Form data is maintained so user can correct and retry

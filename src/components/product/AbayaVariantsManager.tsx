@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
@@ -204,16 +204,33 @@ function AbayaVariantsManagerUI({
   // "size"  → variants differ only by size  (color field hidden / empty)
   // "color" → variants differ only by color (size field hidden / always "Free Size")
   // "both"  → variants have both size and color (classic behaviour)
-  const detectedMode = (): VariationMode => {
-    if (variants.length === 0) return "both";
-    const anyColor = variants.some((v) => v.color && v.color.trim() !== "");
-    const anySize = variants.some((v) => v.size && v.size.trim() !== "");
+  const computeMode = (vList: AbayaVariantItem[]): VariationMode => {
+    if (vList.length === 0) return "both";
+    const anyColor = vList.some((v) => v.color && v.color.trim() !== "");
+    const anySize = vList.some((v) => v.size && v.size.trim() !== "");
     if (anyColor && anySize) return "both";
     if (anyColor) return "color";
     return "size";
   };
 
-  const [variationMode, setVariationMode] = useState<VariationMode>(detectedMode);
+  // Start as "both"; as soon as real variants load (variants.length > 0 and not
+  // just a user-added new one) we sync the mode to match the loaded data once.
+  const [variationMode, setVariationMode] = useState<VariationMode>("both");
+  const [modeSyncedFromLoad, setModeSyncedFromLoad] = useState(false);
+
+  // Sync mode when variants arrive from the server (edit mode) or when user
+  // adds the first variant (create mode). Only run once per product load so
+  // the user can still change the mode manually afterwards.
+  useEffect(() => {
+    if (!modeSyncedFromLoad && variants.length > 0) {
+      setVariationMode(computeMode(variants));
+      setModeSyncedFromLoad(true);
+    }
+    // Reset sync flag when all variants are removed so a fresh product can re-detect.
+    if (variants.length === 0) {
+      setModeSyncedFromLoad(false);
+    }
+  }, [variants, modeSyncedFromLoad]);
 
   const handleChangeMode = (newMode: VariationMode) => {
     if (variants.length > 0) {
@@ -2039,6 +2056,7 @@ function CreateAbayaVariantsWrapper(props: { backendSkuError?: string | null }) 
             qty: u.qty,
             isActive: u.isActive,
             isNew: true,
+            image: u.image || null,
             images: [],
             attributes: [
               { attributeId: "size", valueId: u.size, attributeName: "Size", value: u.size },

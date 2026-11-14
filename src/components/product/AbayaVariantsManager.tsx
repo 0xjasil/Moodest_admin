@@ -189,6 +189,9 @@ interface AbayaVariantsManagerUIProps {
   backendSkuError?: string | null;
 }
 
+// Variation mode: does this product vary by size, color, or both?
+export type VariationMode = "size" | "color" | "both";
+
 function AbayaVariantsManagerUI({
   baseProduct,
   variants,
@@ -196,6 +199,30 @@ function AbayaVariantsManagerUI({
   onRemoveExistingVariant,
   backendSkuError,
 }: AbayaVariantsManagerUIProps) {
+
+  // ── Variation Mode (product-level) ───────────────────────────────────────
+  // "size"  → variants differ only by size  (color field hidden / empty)
+  // "color" → variants differ only by color (size field hidden / always "Free Size")
+  // "both"  → variants have both size and color (classic behaviour)
+  const detectedMode = (): VariationMode => {
+    if (variants.length === 0) return "both";
+    const anyColor = variants.some((v) => v.color && v.color.trim() !== "");
+    const anySize = variants.some((v) => v.size && v.size.trim() !== "");
+    if (anyColor && anySize) return "both";
+    if (anyColor) return "color";
+    return "size";
+  };
+
+  const [variationMode, setVariationMode] = useState<VariationMode>(detectedMode);
+
+  const handleChangeMode = (newMode: VariationMode) => {
+    if (variants.length > 0) {
+      if (!confirm("Changing variation type will clear all current variants. Continue?")) return;
+      setVariants([]);
+    }
+    setVariationMode(newMode);
+  };
+
   // State for Add / Edit Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
@@ -270,10 +297,31 @@ function AbayaVariantsManagerUI({
     setFormSizeType("preset");
     setFormCustomSize("");
     setFormSize("54");
-    setFormColorType("preset");
-    setFormColor("Black");
-    setFormColorHex("#000000");
-    const suggested = generateSuggestedSku(baseProduct.name, "54", "Black");
+
+    // Set color defaults based on variation mode
+    if (variationMode === "size") {
+      setFormColorType("none");
+      setFormColor("");
+      setFormColorHex("");
+    } else if (variationMode === "color") {
+      setFormColorType("preset");
+      setFormColor("Black");
+      setFormColorHex("#000000");
+    } else {
+      setFormColorType("preset");
+      setFormColor("Black");
+      setFormColorHex("#000000");
+    }
+
+    // For color-only mode use a neutral placeholder size
+    if (variationMode === "color") {
+      setFormSizeType("free");
+      setFormSize("Free Size");
+    }
+
+    const col = variationMode === "size" ? "" : "Black";
+    const sz = variationMode === "color" ? "Free Size" : "54";
+    const suggested = generateSuggestedSku(baseProduct.name, sz, col);
     setFormSku(suggested);
     setSkuManuallyEdited(false);
     setFormPrice(baseProduct.basePrice > 0 ? String(baseProduct.basePrice) : "");
@@ -657,18 +705,64 @@ function AbayaVariantsManagerUI({
 
   return (
     <Card className="w-full shadow-xs border-gray-200 dark:border-white/10">
+      {/* ── Variation Mode Selector ── */}
+      <div className="px-4 sm:px-5 pt-4 pb-3 border-b border-gray-100 dark:border-white/5">
+        <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2.5">
+          Variation Type
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              { value: "size",  label: "Size Only",         desc: "Variants differ by size (e.g. 52, 54, 56)" },
+              { value: "color", label: "Color Only",        desc: "Variants differ by color (no size)" },
+              { value: "both",  label: "Size + Color",      desc: "Variants have both size and color" },
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => handleChangeMode(opt.value)}
+              className={cn(
+                "flex items-start gap-2 px-3 py-2 rounded-xl border text-left transition-all",
+                variationMode === opt.value
+                  ? "border-[#5C1A24] bg-[#F5EDE6] dark:bg-[#5C1A24]/20 ring-1 ring-[#5C1A24]"
+                  : "border-gray-200 dark:border-white/10 hover:border-[#5C1A24]/40 bg-white dark:bg-white/[0.02]"
+              )}
+            >
+              <span className={cn(
+                "mt-0.5 size-3.5 rounded-full border-2 shrink-0",
+                variationMode === opt.value
+                  ? "border-[#5C1A24] bg-[#5C1A24]"
+                  : "border-gray-400 dark:border-gray-500"
+              )} />
+              <span>
+                <span className={cn(
+                  "text-xs font-semibold block",
+                  variationMode === opt.value ? "text-[#5C1A24] dark:text-[#D29A90]" : "text-gray-800 dark:text-white"
+                )}>
+                  {opt.label}
+                </span>
+                <span className="text-[11px] text-muted-foreground leading-tight">{opt.desc}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-3 border-b border-gray-100 dark:border-white/5">
         <div>
           <div className="flex items-center gap-2">
             <CardTitle className="text-lg font-bold text-gray-900 dark:text-white">
-              Abaya Product Variants
+              Product Variants
             </CardTitle>
             <Badge variant="secondary" className="text-xs font-semibold px-2 py-0.5">
               {variants.length} Variant{variants.length === 1 ? "" : "s"}
             </Badge>
           </div>
           <CardDescription className="text-xs text-muted-foreground mt-0.5">
-            Configure abaya size lengths (50–62), colorways, SKUs, pricing, and stock inventory.
+            {variationMode === "size" && "Configure sizes, SKUs, pricing, and stock inventory."}
+            {variationMode === "color" && "Configure colors, SKUs, pricing, and stock inventory."}
+            {variationMode === "both" && "Configure size + color combinations, SKUs, pricing, and stock inventory."}
           </CardDescription>
         </div>
 
@@ -761,8 +855,8 @@ function AbayaVariantsManagerUI({
               <thead>
                 <tr className="border-b border-gray-200 dark:border-white/10 bg-gray-50/70 dark:bg-white/[0.02] text-muted-foreground uppercase tracking-wider font-semibold">
                   <th className="py-3 px-3 min-w-[55px]">Image</th>
-                  <th className="py-3 px-3 min-w-[70px]">Size</th>
-                  <th className="py-3 px-3 min-w-[120px]">Color</th>
+                  {variationMode !== "color" && <th className="py-3 px-3 min-w-[70px]">Size</th>}
+                  {variationMode !== "size"  && <th className="py-3 px-3 min-w-[120px]">Color</th>}
                   <th className="py-3 px-3 min-w-[150px]">SKU</th>
                   <th className="py-3 px-3 min-w-[100px]">Price</th>
                   <th className="py-3 px-3 min-w-[100px]">Offer Price</th>
@@ -803,6 +897,7 @@ function AbayaVariantsManagerUI({
                       </td>
 
                       {/* Size */}
+                      {variationMode !== "color" && (
                       <td className="py-3 px-3 align-middle font-bold text-gray-900 dark:text-white">
                         <span
                           className={cn(
@@ -819,8 +914,10 @@ function AbayaVariantsManagerUI({
                             : `Size ${v.size}`}
                         </span>
                       </td>
+                      )}
 
                       {/* Color */}
+                      {variationMode !== "size" && (
                       <td className="py-3 px-3 align-middle">
                         {v.color ? (
                           <div className="flex items-center gap-2">
@@ -840,6 +937,7 @@ function AbayaVariantsManagerUI({
                           </span>
                         )}
                       </td>
+                      )}
 
                       {/* SKU */}
                       <td className="py-3 px-3 align-middle">
@@ -982,10 +1080,12 @@ function AbayaVariantsManagerUI({
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
             <DialogTitle className="text-base font-bold">
-              {editingVariantId ? "Edit Abaya Variant" : "Add Abaya Variant"}
+              {editingVariantId ? "Edit Variant" : "Add Variant"}
             </DialogTitle>
             <DialogDescription className="text-xs">
-              Configure size, color, SKU, price, and stock for this product variant.
+              {variationMode === "size"  && "Configure size, SKU, price, and stock."}
+              {variationMode === "color" && "Configure color, SKU, price, and stock."}
+              {variationMode === "both"  && "Configure size + color, SKU, price, and stock."}
             </DialogDescription>
           </DialogHeader>
 
@@ -998,7 +1098,8 @@ function AbayaVariantsManagerUI({
               </div>
             )}
 
-            {/* Size Selector with Flexible Modes */}
+            {/* Size Selector with Flexible Modes — hidden for color-only products */}
+            {variationMode !== "color" && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="variant-size" className="text-xs font-semibold">
@@ -1145,8 +1246,10 @@ function AbayaVariantsManagerUI({
                 <p className="text-[11px] text-red-500">{formErrors.size}</p>
               )}
             </div>
+            )} {/* end variationMode !== "color" */}
 
-            {/* Color Option Selector */}
+            {/* Color Option Selector — hidden for size-only products */}
+            {variationMode !== "size" && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-semibold">Color Selection</Label>
@@ -1261,6 +1364,7 @@ function AbayaVariantsManagerUI({
                 <p className="text-[11px] text-red-500">{formErrors.colorHex}</p>
               )}
             </div>
+            )} {/* end variationMode !== "size" */}
 
             {/* SKU with Generator */}
             <div className="space-y-1.5">
